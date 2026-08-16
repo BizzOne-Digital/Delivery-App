@@ -1,0 +1,14 @@
+node_modules/
+dist/
+coverage/
+uploads/
+.mongodb-data/
+*.log
+npm-debug.log*
+.DS_Store
+.vercel
+
+# Environment — never commit real secrets
+.env
+.env.*
+!.env.example
