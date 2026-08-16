@@ -1,8 +1,12 @@
-node_modules
-dist
-coverage
-tests
-uploads
+# Anchored with a leading "/" so each rule matches only at the project root.
+# Unanchored, "uploads" would also match the source module src/modules/uploads/
+# and "tests" any directory called tests at any depth.
+/node_modules
+/dist
+/coverage
+/tests
+/uploads
+/backend.zip
 .env
 .env.*
 !.env.example

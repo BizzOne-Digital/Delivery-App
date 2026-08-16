@@ -1,12 +1,22 @@
-node_modules/
-dist/
-coverage/
-uploads/
-.mongodb-data/
+# Build and dependency output.
+#
+# Every path here is anchored with a leading "/" so it matches only at the
+# repository root. An unanchored rule such as "uploads/" matches a directory of
+# that name at ANY depth — which silently excluded the source module
+# src/modules/uploads/ and broke the Vercel build with
+# "Cannot find module '../modules/uploads/uploads.routes'".
+/node_modules/
+/dist/
+/coverage/
+
+# Runtime storage for locally-saved proof images — never source code.
+/uploads/
+/.mongodb-data/
+
 *.log
 npm-debug.log*
 .DS_Store
-.vercel
+/.vercel
 
 # Environment — never commit real secrets
 .env
