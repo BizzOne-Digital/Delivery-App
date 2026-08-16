@@ -78,6 +78,43 @@ function resolveMongoUri(): string {
   return value;
 }
 
+/**
+ * The signing secrets have development defaults so `npm test` and a fresh clone
+ * run without setup. Those defaults are published in this file, so anyone could
+ * mint a valid access token against a deployment still using them — refuse to
+ * boot in production rather than serve forgeable sessions.
+ */
+const DEV_SECRET_DEFAULTS: Record<string, string> = {
+  JWT_ACCESS_SECRET: 'test_access_secret_change_me_please',
+  JWT_REFRESH_SECRET: 'test_refresh_secret_change_me_please',
+  TRACKING_TOKEN_SECRET: 'test_tracking_secret_change_me_ok',
+};
+
+if (raw.NODE_ENV === 'production') {
+  const stillDefault = Object.entries(DEV_SECRET_DEFAULTS)
+    .filter(([key, devValue]) => (raw as Record<string, unknown>)[key] === devValue)
+    .map(([key]) => key);
+
+  if (stillDefault.length > 0) {
+    // Names only — never print the values.
+    throw new Error(
+      [
+        '',
+        'Refusing to start in production with development signing secrets:',
+        ...stillDefault.map((key) => `  - ${key}`),
+        '',
+        'These defaults are committed to the repository, so tokens signed with',
+        'them can be forged by anyone. Set a unique random value for each in your',
+        'hosting provider\'s environment variables (Vercel → Settings → Environment',
+        'Variables), then redeploy. Generate one with:',
+        '',
+        '  node -e "console.log(require(\'crypto\').randomBytes(48).toString(\'base64url\'))"',
+        '',
+      ].join('\n'),
+    );
+  }
+}
+
 const corsOrigins = raw.CLIENT_URL.split(',')
   .map((origin) => origin.trim())
   .filter(Boolean);
