@@ -11,6 +11,7 @@ import { apiLimiter } from './middleware/rateLimit';
 import { errorHandler, notFoundHandler } from './middleware/error';
 import apiRoutes from './routes';
 import { sendSuccess } from './utils/response';
+import { ApiError } from './utils/ApiError';
 
 export function createApp(options: { connectOnRequest?: boolean } = {}): Application {
   const app = express();
@@ -37,7 +38,21 @@ export function createApp(options: { connectOnRequest?: boolean } = {}): Applica
         if (!env.isProduction && /^https?:\/\/(localhost|127\.0\.0\.1|\d+\.\d+\.\d+\.\d+)(:\d+)?$/.test(origin)) {
           return callback(null, true);
         }
-        callback(new Error('Not allowed by CORS'));
+        /*
+         * A plain Error here surfaces as an opaque 500, which reads as "the API
+         * is broken" when the real cause is a missing entry in CLIENT_URL — and
+         * a browser only reports "failed to fetch", so the server response is
+         * the sole place this can be explained. Answer with a deliberate 403
+         * that names the fix. The origin is echoed back to the caller that sent
+         * it, so this leaks nothing they did not already know.
+         */
+        callback(
+          ApiError.forbidden(
+            `Origin ${origin} is not allowed. Add it to the CLIENT_URL environment ` +
+              'variable (comma-separated, no spaces, no trailing slash) and redeploy.',
+            'CORS_ORIGIN_NOT_ALLOWED',
+          ),
+        );
       },
       credentials: true,
       methods: ['GET', 'POST', 'PATCH', 'PUT', 'DELETE', 'OPTIONS'],
